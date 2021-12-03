@@ -1,0 +1,22 @@
+[package]
+name = "aoc2021"
+version = "0.1.0"
+authors = ["Andrea Nall <anall@andreanall.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[[bin]]
+name = "aoc21-day1"
+path = "src/day1.rs"
+
+[profile.release]
+opt-level = 3
+
+[dependencies]
+adventlib = { path="../adventlib" }
+#console-bitmap = { path="../console-bitmap" }
+#itertools = "~0.7.8"
+#regex = "~1.4.2"
+#lazy_static = "~1.4.0"
+#intspan = "~0.4.14"
