@@ -19,7 +19,8 @@ fn main() -> aoc::Result<()> {
     }).collect();
 
     let pt1 = instructions.iter().fold( (0,0), |prev,cur| (prev.0+cur.0,prev.1+cur.1) );
-    let pt2 = instructions.iter().fold( (0,0,0), |prev,cur| (prev.0+cur.0,prev.1+cur.0*prev.2,prev.2+cur.1) );
+    let pt2 = instructions.iter().fold( (0,0,0), |prev,cur|
+        (prev.0+cur.0,prev.1+cur.0*prev.2,prev.2+cur.1) );
 
     println!("{} {} {:?}",pt1.0*pt1.1,pt2.0*pt2.1,pt2);
 
