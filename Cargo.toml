@@ -26,14 +26,23 @@ path = "src/day4.rs"
 name = "aoc21-day5"
 path = "src/day5.rs"
 
+[[bin]]
+name = "aoc21-day6"
+path = "src/day6.rs"
+
+[[bin]]
+name = "aoc21-day7"
+path = "src/day7.rs"
+
 [profile.release]
 opt-level = 3
 
 [dependencies]
 adventlib = { path="../adventlib" }
 regex = "~1.4.2"
+itertools = "~0.10.3"
 
 #console-bitmap = { path="../console-bitmap" }
-#itertools = "~0.7.8"
+
 #lazy_static = "~1.4.0"
 #intspan = "~0.4.14"

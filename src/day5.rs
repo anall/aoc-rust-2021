@@ -1,8 +1,86 @@
 #![warn( clippy::all, clippy::pedantic )]
 use std::io::BufRead;
-use std::cmp::{self,Ordering};
+use std::cmp;
 use adventlib::aoc;
 use regex::Regex;
+
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+struct Point(i32,i32);
+
+struct PointIterator {
+    start : Point,
+    n : i32, len : i32,
+    x_dir : i32,
+    y_dir : i32
+}
+impl PointIterator {
+    fn new(line : &Line) -> Self {
+        let Point(x1,y1) = line.0;
+        let Point(x2,y2) = line.1;
+
+        if x1==x2 {
+            assert!(y1 < y2);
+            Self {
+                start: line.0.clone(),
+                n: 0,
+                len: y2-y1,
+                x_dir: 0,
+                y_dir: 1,
+            }
+        } else if y1==y2 {
+            assert!(x1 < x2);
+            Self {
+                start: line.0.clone(),
+                n: 0,
+                len: x2-x1,
+                x_dir: 1,
+                y_dir: 0,
+            }
+        } else {
+            assert!( (x2-x1).abs() == (y2-y1).abs() );
+            let len = (x2-x1).abs();
+
+            Self {
+                start: line.0.clone(),
+                n: 0,
+                len: len,
+                x_dir: (x2-x1)/len,
+                y_dir: (y2-y1)/len,
+            }
+        }
+    }
+}
+impl Iterator for PointIterator {
+    type Item = Point;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.n == self.len+1 {
+            None
+        } else {
+            let pt = Point(self.start.0 + self.n * self.x_dir,self.start.1 + self.n * self.y_dir);
+            self.n += 1;
+            Some(pt)
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+struct Line(Point,Point);
+impl Line {
+    fn is_axial(&self) -> bool {
+        self.0.0 == self.1.0 || self.0.1 ==  self.1.1
+    }
+
+    fn points(&self) -> PointIterator {
+        PointIterator::new(self)
+    }
+
+    fn apply_count_to_data(&self, data : &mut[Vec<u8>], base_x : i32, base_y : i32) {
+        for pt in self.points() {
+            data[(pt.0 - base_x) as usize][(pt.1 - base_y) as usize] += 1;
+        }
+    }
+}
 
 fn count_intersections(data : &[Vec<u8>]) -> u32 {
     let mut ct = 0;
@@ -18,65 +96,43 @@ fn count_intersections(data : &[Vec<u8>]) -> u32 {
 fn main() -> aoc::Result<()> {
     let regex = Regex::new(r"^(\d+),(\d+) -> (\d+),(\d+)$").unwrap();
     let reader = aoc::file("inputs/day5")?;
-
+    
     let lines : Vec<_> = reader.lines().map(Result::unwrap).map(|line| {
         let cap = regex.captures(&line).unwrap();
-        let x1 = cap[1].parse::<i32>().unwrap();
-        let y1 = cap[2].parse::<i32>().unwrap();
-        let x2 = cap[3].parse::<i32>().unwrap();
-        let y2= cap[4].parse::<i32>().unwrap();
+        let pt1 = Point( cap[1].parse::<i32>().unwrap(), cap[2].parse::<i32>().unwrap() );
+        let pt2 =  Point(cap[3].parse::<i32>().unwrap(), cap[4].parse::<i32>().unwrap() );
 
-
-        if x1.cmp(&x2).then(y1.cmp(&y2)) == Ordering::Greater {
-            ((x2,y2),(x1,y1))
+        if pt2 < pt1 {
+            Line(pt2,pt1)
         } else {
-            ((x1,y1),(x2,y2))
+            Line(pt1,pt2)
         }
     }).collect();
 
-    let min_x = lines.iter().map(|((x1,_),(x2,_))| { assert!(x2 >= x1); x1 }).min().unwrap();
-    let max_x = lines.iter().map(|((x1,_),(x2,_))| { assert!(x2 >= x1); x2 }).max().unwrap();
+    let min_x = lines.iter().map(|Line(pt1,pt2)| { assert!(pt2.0 >= pt1.0); pt1.0 }).min().unwrap();
+    let max_x = lines.iter().map(|Line(pt1,pt2)| { assert!(pt2.0 >= pt1.0); pt2.0 }).max().unwrap();
     let len_x = (max_x - min_x) as usize;
 
-    let min_y = lines.iter().map(|((_,y1),(_,y2))| cmp::min(y1,y2)).min().unwrap();
-    let max_y = lines.iter().map(|((_,y1),(_,y2))| cmp::max(y1,y2)).max().unwrap();
+    let min_y = lines.iter().map(|Line(pt1,pt2)| cmp::min(pt1.1,pt2.1)).min().unwrap();
+    let max_y = lines.iter().map(|Line(pt1,pt2)| cmp::max(pt1.1,pt2.1)).max().unwrap();
     let len_y = (max_y - min_y) as usize;
-
-    println!("{} {}",min_x,max_x);
-    println!("{} {}",min_y,max_y);
 
     let mut data = vec![vec![0_u8; len_y+1]; len_x+1];
 
-    for ((x1,y1),(x2,y2)) in &lines {
-        if x1 == x2 {
-            let i = (x1 - min_x) as usize;
-            for j in (*y1) ..= (*y2) {
-                data[i][(j  - min_y) as usize] += 1;
-            }
-        } else if y1 == y2 {
-            let j = (y1 - min_y) as usize;
-            for i in (*x1) ..= (*x2) {
-                data[(i - min_x) as usize][j] += 1;
-            }
+    for line in &lines {
+        if line.is_axial() {
+            line.apply_count_to_data(&mut data, min_x, min_y);
         }
     }
 
     let pt1 = count_intersections(&data);
 
-    for ((x1,y1),(x2,y2)) in &lines {
-        if x1 != x2 && y1 != y2 {
-            assert!((x2-x1).abs() == (y2-y1).abs());
-            let len = (x2-x1).abs();
-            let x_dir = (x2-x1)/len;
-            let y_dir = (y2-y1)/len;
-
-            for n in 0 ..= len {
-                data[(x1 + n * x_dir - min_x) as usize][(y1 + n * y_dir  - min_y) as usize] += 1;
-            }
+    for line in &lines {
+        if ! line.is_axial() {
+            line.apply_count_to_data(&mut data, min_x, min_y);
         }
     }
 
-    
     let pt2 = count_intersections(&data);
     println!("{} {}",pt1,pt2);
 
