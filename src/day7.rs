@@ -8,7 +8,6 @@ fn cost_move_to(numbers : &[i32], goal : i32) -> i32 {
     numbers.iter().map(|num| (num-goal).abs()).sum()
 }
 
-
 fn cost_move_to_series(numbers : &[i32], goal : i32) -> i32 {
     numbers.iter().map(|num| (1..=(num-goal).abs()).sum::<i32>() ).sum()
 }
@@ -30,7 +29,6 @@ fn main() -> aoc::Result<()> {
     let best_goal_pt2 = (min ..= max).min_by_key(|goal| cost_move_to_series(&numbers,*goal)).unwrap();
     
     println!("{}",cost_move_to_series(&numbers,best_goal_pt2));
-
 
     Ok( () )
 }
