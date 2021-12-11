@@ -105,7 +105,7 @@ impl Line {
         segment_mapping.insert(segment_b,'b');
 
         // we know abdg
-        // Of the 3 patterns of length 6 (0, 6, 8) we can get abfg, and exclude abg to give f
+        // Of the 3 patterns of length 6 (0, 6, 9) we can get abfg, and exclude abg to give f
         let length_6 = patterns_by_length.get(&6).unwrap();
         assert!(length_6.len() == 3);
         let segment_f = {
@@ -136,6 +136,7 @@ impl Line {
         assert!(!segment_mapping.contains_key(&segment_e));
         segment_mapping.insert(segment_e,'e');
 
+        // and now that we know all segments we can remap the digits and convert them to numbers
         let digits = self.digits.iter().cloned().map(|d| {
             match d { 
                 Ok(v) => Ok(v),
@@ -154,7 +155,7 @@ impl Line {
                         // 7 is already handled
                         // 8 is already handled
                         "abcdfg" => Ok( (9,s) ),
-                        _ => Err(s)
+                        _ => unreachable!()
                     }
                 }
             }
@@ -182,10 +183,6 @@ fn main() -> aoc::Result<()> {
     let pt2 : usize = values.iter().sum();
 
     println!("{}",pt2);
-
-    /*for line in infered {
-        println!("{:?}",line.digits);
-    }*/
 
     Ok( () )
 }
