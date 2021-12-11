@@ -67,7 +67,7 @@ impl Line {
         let pattern_7 = get_singleton( patterns_by_length.get(&3).unwrap() );
         let pattern_8 = get_singleton( patterns_by_length.get(&7).unwrap() );
 
-        // and we can get segment a
+        // and we can get segment a from 1 and 7
         let segment_a = get_singleton( pattern_7.difference(&pattern_1).copied() );
 
         assert!(!segment_mapping.contains_key(&segment_a));
@@ -122,14 +122,14 @@ impl Line {
         segment_mapping.insert(segment_f,'f');
         
         // we know abdfg
-        // now that we have f, we can get c
+        // now that we have f, we can get c from 1
         let segment_c = get_singleton( pattern_1.iter().copied().filter(|c| *c != segment_f ) ); 
 
         assert!(!segment_mapping.contains_key(&segment_c));
         segment_mapping.insert(segment_c,'c');
 
         // we know abcdfg, only missing e
-        // I could write out the list but 8 is right there, and this would still work if we use other characters
+        // I could write out the list but 8 is right there, and this would still work if we ever have other characters besides "abcdefg"
         let known_segments : HashSet<char> = segment_mapping.keys().copied().collect();
         let segment_e = get_singleton( pattern_8.difference(&known_segments).copied() );
 
