@@ -38,10 +38,15 @@ path = "src/day7.rs"
 name = "aoc21-day8"
 path = "src/day8.rs"
 
+# day 9
 
 [[bin]]
 name = "aoc21-day10"
 path = "src/day10.rs"
+
+[[bin]]
+name = "aoc21-day11"
+path = "src/day11.rs"
 
 [profile.release]
 opt-level = 3
