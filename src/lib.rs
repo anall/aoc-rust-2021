@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 pub struct BitIterator<T: Iterator<Item=u8>> {
     iter : T,
     cur : Option<(u8,usize)>,
@@ -60,71 +62,62 @@ impl PacketData for LiteralPacket {
     fn evaluate(&self) -> PacketLiteralType { self.0 }
 }
 
-// yes, this duplicates sum_child_versions, sigh
-struct SumOperator(Vec<Packet>);
-impl PacketData for SumOperator {
-    fn sum_child_versions(&self) -> u32 { self.0.iter().map(|packet| packet.sum_versions() ).sum::<u32>() }
-    fn evaluate(&self) -> PacketLiteralType { self.0.iter().map(|packet| packet.data.evaluate() ).sum::<PacketLiteralType>() }
+trait EvaluateOperatorFunction {
+    fn evaluate<I : Iterator<Item=PacketLiteralType>>(iter : I) -> PacketLiteralType;
 }
 
-struct ProductOperator(Vec<Packet>);
-impl PacketData for ProductOperator {
+struct EvaluateOperator<T :  EvaluateOperatorFunction>(Vec<Packet>,T);
+impl<T :  EvaluateOperatorFunction> PacketData for EvaluateOperator<T> {
     fn sum_child_versions(&self) -> u32 { self.0.iter().map(|packet| packet.sum_versions() ).sum::<u32>() }
-    fn evaluate(&self) -> PacketLiteralType {
-        let mut iter = self.0.iter().map(|packet| packet.data.evaluate() );
+    fn evaluate(&self) -> PacketLiteralType { T::evaluate( self.0.iter().map(|packet| packet.data.evaluate() ) ) }
+}
+impl<T :  EvaluateOperatorFunction + Default> EvaluateOperator<T> {
+    fn new(children : Vec<Packet>) -> Box<Self> {
+        Box::new( Self(children,Default::default()) )
+    } 
+}
+
+#[derive(Default)]
+struct SumFunction;
+impl EvaluateOperatorFunction for SumFunction {
+    fn evaluate<I : Iterator<Item=PacketLiteralType>>(iter : I) -> PacketLiteralType { iter.sum() }
+}
+
+#[derive(Default)]
+struct ProductFunction;
+impl EvaluateOperatorFunction for ProductFunction {
+    fn evaluate<I : Iterator<Item=PacketLiteralType>>(mut iter : I) -> PacketLiteralType {
         let first = iter.next().expect("product operator requires at least one item");
         iter.fold(first,|prev,cur| prev*cur)
     }
 }
 
-struct MinimumOperator(Vec<Packet>);
-impl PacketData for MinimumOperator {
-    fn sum_child_versions(&self) -> u32 { self.0.iter().map(|packet| packet.sum_versions() ).sum::<u32>() }
-    fn evaluate(&self) -> PacketLiteralType {
-        self.0.iter().map(|packet| packet.data.evaluate() ).min().expect("got 0 children")
+#[derive(Default)]
+struct MinimumFunction;
+impl EvaluateOperatorFunction for MinimumFunction {
+    fn evaluate<I : Iterator<Item=PacketLiteralType>>(iter : I) -> PacketLiteralType { iter.min().expect("no children") }
+}
+
+#[derive(Default)]
+struct MaximumFunction;
+impl EvaluateOperatorFunction for MaximumFunction {
+    fn evaluate<I : Iterator<Item=PacketLiteralType>>(iter : I) -> PacketLiteralType { iter.max().expect("no children") }
+}
+
+struct ComparisonOperator(Packet,Packet,Ordering);
+impl ComparisonOperator {
+    fn new(mut children : Vec<Packet>, ordering : Ordering) -> Box<Self> {
+        assert!(children.len() == 2, "incorrect number of children");
+        let rhs = children.pop().unwrap();
+        let lhs = children.pop().unwrap();
+        Box::new( Self(lhs,rhs,ordering) )
     }
 }
 
-struct MaximumOperatror(Vec<Packet>);
-impl PacketData for MaximumOperatror {
-    fn sum_child_versions(&self) -> u32 { self.0.iter().map(|packet| packet.sum_versions() ).sum::<u32>() }
+impl PacketData for ComparisonOperator {
+    fn sum_child_versions(&self) -> u32 { self.0.sum_versions() + self.1.sum_versions() }
     fn evaluate(&self) -> PacketLiteralType {
-        self.0.iter().map(|packet| packet.data.evaluate() ).max().expect("got 0 children")
-    }
-}
-
-struct GreaterThanOperator(Vec<Packet>);
-impl PacketData for GreaterThanOperator {
-    fn sum_child_versions(&self) -> u32 { self.0.iter().map(|packet| packet.sum_versions() ).sum::<u32>() }
-    fn evaluate(&self) -> PacketLiteralType {
-        assert!(self.0.len() == 2,"invalid number of children");
-        if self.0[0].evaluate() > self.0[1].evaluate() {
-            1
-        } else {
-            0
-        }
-    }
-}
-
-struct LessThanOperator(Vec<Packet>);
-impl PacketData for LessThanOperator {
-    fn sum_child_versions(&self) -> u32 { self.0.iter().map(|packet| packet.sum_versions() ).sum::<u32>() }
-    fn evaluate(&self) -> PacketLiteralType {
-        assert!(self.0.len() == 2,"invalid number of children");
-        if self.0[0].evaluate() < self.0[1].evaluate() {
-            1
-        } else {
-            0
-        }
-    }
-}
-
-struct EqualOperator(Vec<Packet>);
-impl PacketData for EqualOperator {
-    fn sum_child_versions(&self) -> u32 { self.0.iter().map(|packet| packet.sum_versions() ).sum::<u32>() }
-    fn evaluate(&self) -> PacketLiteralType {
-        assert!(self.0.len() == 2,"invalid number of children");
-        if self.0[0].evaluate() == self.0[1].evaluate() {
+        if self.0.evaluate().cmp(&self.1.evaluate()) == self.2 {
             1
         } else {
             0
@@ -180,14 +173,14 @@ impl Packet {
             }
         }
         return Some( match id {
-            0 => Box::new( SumOperator(packets) ),
-            1 => Box::new( ProductOperator(packets) ),
-            2 => Box::new( MinimumOperator(packets) ),
-            3 => Box::new( MaximumOperatror(packets) ),
+            0 => EvaluateOperator::<SumFunction>::new(packets),
+            1 => EvaluateOperator::<ProductFunction>::new(packets),
+            2 => EvaluateOperator::<MinimumFunction>::new(packets),
+            3 => EvaluateOperator::<MaximumFunction>::new(packets),
             // literal
-            5 => Box::new( GreaterThanOperator(packets) ),
-            6 => Box::new( LessThanOperator(packets) ),
-            7 => Box::new( EqualOperator(packets) ),
+            5 => ComparisonOperator::new(packets,Ordering::Greater),
+            6 => ComparisonOperator::new(packets,Ordering::Less),
+            7 => ComparisonOperator::new(packets,Ordering::Equal),
             _ => unimplemented!("invalid operator {}",id)
             //_ => Box::new( OperatorPacket(id,packets) ),
         } );
@@ -198,7 +191,6 @@ impl Packet {
     }
 
     pub fn sum_versions(&self) -> u32 {
-        let recursed_version = self.data.sum_child_versions();
-        recursed_version + (self.version as u32)
+        self.data.sum_child_versions() + (self.version as u32)
     }
 }
