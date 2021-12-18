@@ -177,12 +177,11 @@ impl Packet {
             1 => EvaluateOperator::<ProductFunction>::new(packets),
             2 => EvaluateOperator::<MinimumFunction>::new(packets),
             3 => EvaluateOperator::<MaximumFunction>::new(packets),
-            // literal
+            4 => panic!("somehow literal got to parse_operator"),
             5 => ComparisonOperator::new(packets,Ordering::Greater),
             6 => ComparisonOperator::new(packets,Ordering::Less),
             7 => ComparisonOperator::new(packets,Ordering::Equal),
-            _ => unimplemented!("invalid operator {}",id)
-            //_ => Box::new( OperatorPacket(id,packets) ),
+            _ => unreachable!("invalid operator {}",id)
         } );
     }
 
