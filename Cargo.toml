@@ -48,6 +48,18 @@ path = "src/day10.rs"
 name = "aoc21-day11"
 path = "src/day11.rs"
 
+# day 12
+
+[[bin]]
+name = "aoc21-day13"
+path = "src/day13.rs"
+
+# day 14
+
+[[bin]]
+name = "aoc21-day15"
+path = "src/day15.rs"
+
 [profile.release]
 opt-level = 3
 
@@ -55,8 +67,8 @@ opt-level = 3
 adventlib = { path="../adventlib" }
 regex = "~1.4.2"
 itertools = "~0.10.3"
-
-#console-bitmap = { path="../console-bitmap" }
+console-bitmap = { git = "https://github.com/anall/console-bitmap-rs" }
+pathfinding = "2.2.2"
 
 #lazy_static = "~1.4.0"
 #intspan = "~0.4.14"
