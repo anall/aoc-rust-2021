@@ -63,13 +63,13 @@ impl PacketData for LiteralPacket {
 }
 
 trait EvaluateOperatorFunction {
-    fn evaluate<I : Iterator<Item=PacketLiteralType>>(iter : I) -> PacketLiteralType;
+    fn evaluate<I : Iterator<Item=PacketLiteralType>>(&self,iter : I) -> PacketLiteralType;
 }
 
 struct EvaluateOperator<T :  EvaluateOperatorFunction>(Vec<Packet>,T);
 impl<T :  EvaluateOperatorFunction> PacketData for EvaluateOperator<T> {
     fn sum_child_versions(&self) -> u32 { self.0.iter().map(|packet| packet.sum_versions() ).sum::<u32>() }
-    fn evaluate(&self) -> PacketLiteralType { T::evaluate( self.0.iter().map(|packet| packet.data.evaluate() ) ) }
+    fn evaluate(&self) -> PacketLiteralType { self.1.evaluate( self.0.iter().map(|packet| packet.data.evaluate() ) ) }
 }
 impl<T :  EvaluateOperatorFunction + Default> EvaluateOperator<T> {
     fn new(children : Vec<Packet>) -> Box<Self> {
@@ -80,13 +80,13 @@ impl<T :  EvaluateOperatorFunction + Default> EvaluateOperator<T> {
 #[derive(Default)]
 struct SumFunction;
 impl EvaluateOperatorFunction for SumFunction {
-    fn evaluate<I : Iterator<Item=PacketLiteralType>>(iter : I) -> PacketLiteralType { iter.sum() }
+    fn evaluate<I : Iterator<Item=PacketLiteralType>>(&self,iter : I) -> PacketLiteralType { iter.sum() }
 }
 
 #[derive(Default)]
 struct ProductFunction;
 impl EvaluateOperatorFunction for ProductFunction {
-    fn evaluate<I : Iterator<Item=PacketLiteralType>>(mut iter : I) -> PacketLiteralType {
+    fn evaluate<I : Iterator<Item=PacketLiteralType>>(&self,mut iter : I) -> PacketLiteralType {
         let first = iter.next().expect("product operator requires at least one item");
         iter.fold(first,|prev,cur| prev*cur)
     }
@@ -95,13 +95,13 @@ impl EvaluateOperatorFunction for ProductFunction {
 #[derive(Default)]
 struct MinimumFunction;
 impl EvaluateOperatorFunction for MinimumFunction {
-    fn evaluate<I : Iterator<Item=PacketLiteralType>>(iter : I) -> PacketLiteralType { iter.min().expect("no children") }
+    fn evaluate<I : Iterator<Item=PacketLiteralType>>(&self,iter : I) -> PacketLiteralType { iter.min().expect("no children") }
 }
 
 #[derive(Default)]
 struct MaximumFunction;
 impl EvaluateOperatorFunction for MaximumFunction {
-    fn evaluate<I : Iterator<Item=PacketLiteralType>>(iter : I) -> PacketLiteralType { iter.max().expect("no children") }
+    fn evaluate<I : Iterator<Item=PacketLiteralType>>(&self,iter : I) -> PacketLiteralType { iter.max().expect("no children") }
 }
 
 struct ComparisonOperator(Packet,Packet,Ordering);
