@@ -1,4 +1,4 @@
-#![warn( clippy::all, clippy::pedantic )]
+#![warn( clippy::pedantic )]
 use std::io::BufRead;
 use adventlib::aoc;
 
@@ -8,10 +8,10 @@ struct OctopusIterator {
 }
 
 impl OctopusIterator {
-    fn new_from_data(data : &Vec<Vec<u8>>) -> Self {
+    fn new_from_data(data : &[Vec<u8>]) -> Self {
         let len = data[0].len();
         assert!(data.iter().all(|v| v.len() == len));
-        Self { data: data.clone() }
+        Self { data: data.to_vec() }
     }
 }
 

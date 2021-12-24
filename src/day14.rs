@@ -1,5 +1,4 @@
-#![warn( clippy::all, clippy::pedantic )]
-use std::hash::Hash;
+#![warn( clippy::pedantic )]
 use std::io::BufRead;
 use std::collections::HashMap;
 use adventlib::aoc;
@@ -26,6 +25,14 @@ fn frequency_count(polymer : &(HashMap<(char,char),usize>,char)) -> HashMap<char
     }
     *out.entry( polymer.1 ).or_default() += 1;
     out
+}
+
+fn frequency_answer(polymer : &(HashMap<(char,char),usize>,char)) -> usize {
+    let frequency = frequency_count(polymer);
+    let min_freq = *frequency.iter().min_by_key(|(_,freq)| **freq).unwrap().1;
+    let max_freq = *frequency.iter().max_by_key(|(_,freq)| **freq).unwrap().1;
+
+    max_freq - min_freq
 }
 
 fn main() -> aoc::Result<()> {
@@ -63,26 +70,18 @@ fn main() -> aoc::Result<()> {
         (out,last_char)
     };
 
-    let mut polymer = paired_polymer.clone();
+    let mut polymer = paired_polymer;
     for _ in 0 .. 10 {
         polymer = run_cycle(&polymer, &conversions);
     }
 
-    let frequency = frequency_count(&polymer);
-    let min_freq = frequency.iter().min_by_key(|(_,freq)| **freq).unwrap();
-    let max_freq = frequency.iter().max_by_key(|(_,freq)| **freq).unwrap();
-
-    println!("{}",*max_freq.1-*min_freq.1);
+    println!("{}",frequency_answer(&polymer));
 
     for _ in 10 .. 40 {
         polymer = run_cycle(&polymer, &conversions);
     }
 
-    let frequency = frequency_count(&polymer);
-    let min_freq = frequency.iter().min_by_key(|(_,freq)| **freq).unwrap();
-    let max_freq = frequency.iter().max_by_key(|(_,freq)| **freq).unwrap();
-
-    println!("{}",*max_freq.1-*min_freq.1);
+    println!("{}",frequency_answer(&polymer));
 
     Ok( () )
 }

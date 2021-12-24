@@ -1,4 +1,5 @@
-#![warn( clippy::all, clippy::pedantic )]
+#![warn( clippy::pedantic )]
+#![allow(clippy::cast_sign_loss)]
 use std::io::BufRead;
 use adventlib::aoc;
 
@@ -9,14 +10,14 @@ fn read_board<T: Iterator<Item=String>>(lines : &mut T) -> Option<Board> {
     let mut board = Vec::new();
     for _ in 0..5 {
         let raw_line = lines.next()?;
-        let line : Vec<_> = raw_line.split(" ").filter(|v| v.len() > 0).map(|s| s.parse::<i8>().unwrap() ).collect();
-        board.push(line)
+        let line : Vec<_> = raw_line.split(' ').filter(|v| !v.is_empty()).map(|s| s.parse::<i8>().unwrap() ).collect();
+        board.push(line);
     }
 
     Some( board )
 }
 
-fn find_winning_board(numbers : &Vec<i8>, mut boards : Vec<Board>) -> Option<(i8,Board)> {
+fn find_winning_board(numbers : &[i8], mut boards : Vec<Board>) -> Option<(i8,Board)> {
     for number in numbers {
         for board in &mut boards {
             for row in board.iter_mut() {
@@ -38,7 +39,7 @@ fn find_winning_board(numbers : &Vec<i8>, mut boards : Vec<Board>) -> Option<(i8
     None
 }
 
-fn find_last_winning_board(numbers : &Vec<i8>, mut boards : Vec<Board>) -> Option<(i8,Board)> {
+fn find_last_winning_board(numbers : &[i8], mut boards : Vec<Board>) -> Option<(i8,Board)> {
     let mut winner = None;
     let mut finished_boards = vec![false; boards.len()];
     
@@ -80,7 +81,7 @@ fn main() -> aoc::Result<()> {
 
     let mut lines = reader.lines().map(Result::unwrap);
 
-    let numbers : Vec<_> = lines.next().ok_or(aoc::Error::ParseFailed)?.split(",").map(|s| s.parse::<i8>().unwrap() ).collect();
+    let numbers : Vec<_> = lines.next().ok_or(aoc::Error::ParseFailed)?.split(',').map(|s| s.parse::<i8>().unwrap() ).collect();
 
     let mut boards : Vec<Board> = Vec::new();
     while let Some(board) = read_board(&mut lines) {

@@ -1,4 +1,4 @@
-#![warn( clippy::all, clippy::pedantic )]
+#![warn( clippy::pedantic )]
 use std::io::BufRead;
 use adventlib::aoc;
 use std::collections::HashSet;
@@ -34,7 +34,7 @@ fn walk_basin(data : &[Vec<u32>], i_init : usize, j_init : usize) -> Vec<u32> {
         }
     }
 
-    return basin;
+    basin
 }
 
 fn main() -> aoc::Result<()> {
@@ -59,7 +59,7 @@ fn main() -> aoc::Result<()> {
 
     let mut basins : Vec<usize> = minima.iter().map(|v| walk_basin(&data, v.0, v.1).len() ).collect();
     basins.sort_by_key(|v| std::cmp::Reverse(*v) );
-    let p2 = basins[0..3].iter().fold(1,|prev,cur| prev*cur);
+    let p2 : usize = basins[0..3].iter().product();
 
     println!("{}",p2);
 

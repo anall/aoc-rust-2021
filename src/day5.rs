@@ -1,4 +1,5 @@
-#![warn( clippy::all, clippy::pedantic )]
+#![warn( clippy::pedantic )]
+#![allow( clippy::cast_sign_loss )]
 use std::io::BufRead;
 use std::cmp;
 use adventlib::aoc;
@@ -21,7 +22,7 @@ impl PointIterator {
         if x1==x2 {
             assert!(y1 < y2);
             Self {
-                start: line.0.clone(),
+                start: line.0,
                 n: 0,
                 len: y2-y1,
                 x_dir: 0,
@@ -30,7 +31,7 @@ impl PointIterator {
         } else if y1==y2 {
             assert!(x1 < x2);
             Self {
-                start: line.0.clone(),
+                start: line.0,
                 n: 0,
                 len: x2-x1,
                 x_dir: 1,
@@ -41,9 +42,9 @@ impl PointIterator {
             let len = (x2-x1).abs();
 
             Self {
-                start: line.0.clone(),
+                start: line.0,
                 n: 0,
-                len: len,
+                len,
                 x_dir: (x2-x1)/len,
                 y_dir: (y2-y1)/len,
             }

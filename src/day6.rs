@@ -1,4 +1,4 @@
-#![warn( clippy::all, clippy::pedantic )]
+#![warn( clippy::pedantic )]
 use std::io::BufRead;
 use adventlib::aoc;
 
@@ -38,7 +38,7 @@ impl State {
 }
 fn main() -> aoc::Result<()> {
     let reader = aoc::file("inputs/day6")?;
-    let numbers : Vec<_> = reader.lines().next().unwrap().unwrap().split(",").map(|v| v.parse::<u8>().unwrap() ).collect();
+    let numbers : Vec<_> = reader.lines().next().unwrap().unwrap().split(',').map(|v| v.parse::<u8>().unwrap() ).collect();
 
     let state = State::new(&numbers);
 

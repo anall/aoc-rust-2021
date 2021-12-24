@@ -1,4 +1,4 @@
-#![warn( clippy::all, clippy::pedantic )]
+#![warn( clippy::pedantic )]
 use std::io::BufRead;
 use adventlib::aoc;
 use regex::Regex;

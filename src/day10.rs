@@ -1,7 +1,8 @@
-#![warn( clippy::all, clippy::pedantic )]
+#![warn( clippy::pedantic )]
 use std::io::BufRead;
 use adventlib::aoc;
 
+#[allow(clippy::needless_return)]
 fn first_mismatch(s : &str) -> Result<char,usize> {
     let mut expected_closer = Vec::new();
     for ch in s.chars() {
@@ -20,7 +21,7 @@ fn first_mismatch(s : &str) -> Result<char,usize> {
         };
     }
     
-    return Err( expected_closer.into_iter().rev().map(|ch| score_for_autocomplete(ch)).fold(0_usize, |prev,next| prev*5 + next) );
+    return Err( expected_closer.into_iter().rev().map(score_for_autocomplete).fold(0_usize, |prev,next| prev*5 + next) );
 }
 
 fn score_for_autocomplete(ch : char) -> usize {
@@ -49,10 +50,10 @@ fn main() -> aoc::Result<()> {
     let lines : Vec<String> = reader.lines().map(Result::unwrap).collect();
 
     let data : Vec<_> = lines.iter().map(|line| first_mismatch(line)).collect();
-    println!("{}", data.iter().map(|s| mismatch_to_score(s)).sum::<usize>());
+    println!("{}", data.iter().map(mismatch_to_score).sum::<usize>());
     
     let mut autocomplete_scores : Vec<_> = data.iter().filter_map(|s| s.err()).collect();
-    autocomplete_scores.sort();
+    autocomplete_scores.sort_unstable();
     println!("{}",autocomplete_scores[autocomplete_scores.len()/2]);
 
     Ok( () )

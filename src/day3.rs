@@ -1,15 +1,15 @@
-#![warn( clippy::all, clippy::pedantic )]
+#![warn( clippy::pedantic )]
 use std::io::BufRead;
 use adventlib::aoc;
 
 fn get_bit_counts(data : &[Vec<u8>]) -> Vec<usize> {
-    let mut iter = data.into_iter();
+    let mut iter = data.iter();
     let first = iter.next().unwrap().iter().map(|v| *v as usize).collect();
-    iter.fold(first, |prev,cur| cur.into_iter().zip(prev).map(|(a,b)| (*a as usize)+b).collect() )
+    iter.fold(first, |prev,cur| cur.iter().zip(prev).map(|(a,b)| (*a as usize)+b).collect() )
 }
 
 fn filter_and_get_last(data : &[Vec<u8>], goal_fn: fn(count : usize, count : usize) -> u8) -> usize {
-    let mut working : Vec<_> = data.into_iter().cloned().collect();
+    let mut working : Vec<_> = data.to_vec();
 
     let mut idx : usize = 0;
     while working.len() > 1 {
@@ -39,6 +39,8 @@ fn main() -> aoc::Result<()> {
     println!("{}",gamma*epsilon);
 
     let oxygen = filter_and_get_last(&data, |count,total| if count >= (total-count) { 1 } else { 0 } );
+
+    #[allow(clippy::overflow_check_conditional)]
     let co2 = filter_and_get_last(&data, |count,total| if count < (total-count) { 1 } else { 0 } );
 
     println!("{}",oxygen*co2);

@@ -1,4 +1,4 @@
-#![warn( clippy::all, clippy::pedantic )]
+#![warn( clippy::pedantic )]
 use std::io::BufRead;
 use std::collections::HashSet;
 use adventlib::aoc;
@@ -8,22 +8,19 @@ use console_bitmap::{self,BraillePatterns};
 
 fn apply_instruction(points : HashSet<(usize,usize)>, (direction,position): (char,usize)) -> HashSet<(usize,usize)> {
     // position-coord+position, except never going negative
+    use std::cmp::Ordering::{Less,Greater,Equal};
     match direction {
         'x' => points.into_iter().filter_map(|(x,y)|
-            if x < position {
-                Some((x,y))
-            } else if x > position {
-                Some((2*position-x,y))
-            } else {
-                None
+            match x.cmp(&position) {
+                Less => Some( (x,y) ),
+                Greater => Some((2*position-x,y)),
+                Equal => None
             }).collect(),
         'y' => points.into_iter().filter_map(|(x,y)|
-            if y < position {
-                Some((x,y))
-            } else if y > position {
-                Some((x,2*position-y))
-            } else {
-                None
+            match y.cmp(&position) {
+                Less => Some( (x,y) ),
+                Greater => Some( (x,2*position-y)),
+                Equal => None
             }).collect(),
         _ => unreachable!()
     }
@@ -35,8 +32,8 @@ fn main() -> aoc::Result<()> {
 
     let mut lines= reader.lines().map(Result::unwrap);
     let mut points : HashSet<(usize,usize)> = HashSet::new();
-    for line in (&mut lines).take_while(|line| line != "") {
-        let mut iter = line.split(",").map(|v| v.parse::<usize>().unwrap());
+    for line in (&mut lines).take_while(|line| !line.is_empty()) {
+        let mut iter = line.split(',').map(|v| v.parse::<usize>().unwrap());
         let x = iter.next().unwrap();
         let y = iter.next().unwrap();
         points.insert( (x,y) );

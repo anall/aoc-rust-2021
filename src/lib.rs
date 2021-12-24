@@ -16,7 +16,7 @@ impl<T: Iterator<Item=u8>> BitIterator<T> {
         for _ in 0 .. ct {
             result = result << 1 | (self.next()? as u32);
         }
-        return Some(result);
+        Some(result)
     }
 
     pub fn bits_read(&self) -> usize {
@@ -27,6 +27,7 @@ impl<T: Iterator<Item=u8>> BitIterator<T> {
 impl<T: Iterator<Item=u8>> Iterator for BitIterator<T> {
     type Item = u8; // makes things easier
 
+    #[allow(clippy::needless_return)]
     fn next(&mut self) -> Option<u8> {
         if let Some((cur_val,mut cur_idx)) = self.cur.take() {
             let result = (cur_val >> cur_idx) & 1;
@@ -154,7 +155,7 @@ impl Packet {
             next_group = iter.next()? == 1;
             result = result << 4 | ( iter.next_integer(4)? as PacketLiteralType );
         }
-        return Some( Box::new( LiteralPacket(result) ) );
+        Some( Box::new( LiteralPacket(result) ) )
     }
 
     fn parse_operator<T: Iterator<Item=u8>>(id : u8, iter : &mut BitIterator<T>) -> Option<Box<dyn PacketData>> {
@@ -172,7 +173,8 @@ impl Packet {
                 packets.push( Self::parse(iter)? );
             }
         }
-        return Some( match id {
+        
+        Some( match id {
             0 => EvaluateOperator::<SumFunction>::new(packets),
             1 => EvaluateOperator::<ProductFunction>::new(packets),
             2 => EvaluateOperator::<MinimumFunction>::new(packets),
@@ -182,7 +184,7 @@ impl Packet {
             6 => ComparisonOperator::new(packets,Ordering::Less),
             7 => ComparisonOperator::new(packets,Ordering::Equal),
             _ => unreachable!("invalid operator {}",id)
-        } );
+        } )
     }
 
     pub fn evaluate(&self) -> PacketLiteralType {

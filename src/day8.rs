@@ -1,4 +1,4 @@
-#![warn( clippy::all, clippy::pedantic )]
+#![warn( clippy::pedantic )]
 use std::io::BufRead;
 use adventlib::aoc;
 
@@ -19,12 +19,12 @@ fn get_singleton<R,I : IntoIterator<Item=R>>(data : I) -> R {
 
 impl Line {
     fn parse_all<T: BufRead>(reader : T) -> Vec<Self> {
-        reader.lines().map(|ln| Self::parse(ln.unwrap())).collect()
+        reader.lines().map(|ln| Self::parse(&ln.unwrap())).collect()
     }
 
     fn decode_seven(s: &str) -> Result<(u8,String),String> {
         let mut chars : Vec<char> = s.chars().collect();
-        chars.sort();
+        chars.sort_unstable();
         let sorted : String = chars.into_iter().collect();
         let len = sorted.len();
         if len == 2 { // cf is unique length
@@ -40,15 +40,15 @@ impl Line {
         }
     }
 
-    fn parse(s : String) -> Self {
+    fn parse(s : &str) -> Self {
         let mut split = s.split(" | ");
         let patterns = split.next().unwrap().to_string();
         let digits = split.next().unwrap().to_string();
         assert!( split.next().is_none() );
 
         Self {
-            patterns: patterns.split(" ").map(|v| v.to_string()).collect(),
-            digits: digits.split(" ").map(|s| Self::decode_seven(s) ).collect()
+            patterns: patterns.split(' ').map(ToString::to_string).collect(),
+            digits: digits.split(' ').map(|s| Self::decode_seven(s) ).collect()
         }
     }
 
@@ -68,7 +68,7 @@ impl Line {
         let pattern_8 = get_singleton( patterns_by_length.get(&7).unwrap() );
 
         // and we can get segment a from 1 and 7
-        let segment_a = get_singleton( pattern_7.difference(&pattern_1).copied() );
+        let segment_a = get_singleton( pattern_7.difference(pattern_1).copied() );
 
         assert!(!segment_mapping.contains_key(&segment_a));
         segment_mapping.insert(segment_a,'a');
@@ -81,7 +81,7 @@ impl Line {
             let mut iter = length_5.iter();
             let mut tmp = iter.next().unwrap().clone();
             for set in iter {
-                tmp = tmp.intersection(set).copied().collect()
+                tmp = tmp.intersection(set).copied().collect();
             }
 
             tmp.iter().copied().filter(|c| *c != segment_a ).collect()
@@ -112,7 +112,7 @@ impl Line {
             let mut iter = length_6.iter();
             let mut tmp = iter.next().unwrap().clone();
             for set in iter {
-                tmp = tmp.intersection(set).copied().collect()
+                tmp = tmp.intersection(set).copied().collect();
             }
 
             get_singleton( tmp.iter().copied().filter(|c| *c != segment_a && *c != segment_b && *c != segment_g ) )
@@ -142,7 +142,7 @@ impl Line {
                 Ok(v) => Ok(v),
                 Err(s) => {
                     let mut remapped_vec : Vec<char> = s.chars().map(|v| *segment_mapping.get(&v).unwrap() ).collect();
-                    remapped_vec.sort();
+                    remapped_vec.sort_unstable();
                     let remapped : String = remapped_vec.into_iter().collect();
                     match remapped.as_str() {
                         "abcefg" => Ok( (0,s) ),
@@ -163,7 +163,7 @@ impl Line {
 
         Self {
             patterns: self.patterns.clone(),
-            digits: digits
+            digits
         }
     }
 }
@@ -178,7 +178,7 @@ fn main() -> aoc::Result<()> {
     println!("{}",counts_pt1);
 
     // try and infer other values
-    let infered : Vec<_> = lines.iter().map(|line| line.infer_segments()).collect();
+    let infered : Vec<_> = lines.iter().map(Line::infer_segments).collect();
     let values : Vec<_> = infered.iter().map(|line| line.digits.iter().fold(0,|prev,v| (prev * 10) + (v.as_ref().unwrap().0 as usize) ) ).collect();
     let pt2 : usize = values.iter().sum();
 
