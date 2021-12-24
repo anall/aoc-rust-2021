@@ -60,7 +60,10 @@ path = "src/day11.rs"
 name = "aoc21-day13"
 path = "src/day13.rs"
 
-# day 14
+[[bin]]
+name = "aoc21-day14"
+path = "src/day14.rs"
+
 
 [[bin]]
 name = "aoc21-day15"
