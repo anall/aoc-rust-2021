@@ -11,7 +11,7 @@ fn get_neighbors<'a>((node,twice,seen) : &(&'a str, Option<&'a str>, usize), edg
     } else {
         neighbors.iter().filter_map(|neighbor| {
             let (neighbor_flag,_) = edges.get(neighbor.as_str()).unwrap();
-            if *neighbor == neighbor.to_ascii_uppercase()  {
+            if *neighbor == neighbor.to_ascii_uppercase()  { // uppercase nodes can be visited as many times as we'd like
                 Some( (neighbor.as_str(),*twice,seen | neighbor_flag) )
             } else if *neighbor == "start" { // Start can never be reentered
                 None
@@ -75,7 +75,7 @@ fn main() -> aoc::Result<()> {
 
     println!("{:?}",result_once.len());
 
-    let result_twice =  walk_and_find(true, &edges);
+    let result_twice = walk_and_find(true, &edges);
 
     println!("{:?}",result_twice.len());
 
