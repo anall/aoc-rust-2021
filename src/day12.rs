@@ -24,38 +24,36 @@ fn get_neighbors<'a>((node,seen) : &(&str, usize), edges : &'a HashMap<String,(u
     }
 }
 
-fn get_neighbors_twice<'a>((node,twice,seen_a,seen_b) : &(&'a str, Option<&'a str>, usize, usize), edges : &'a HashMap<String,(usize,HashSet<String>)>) -> Vec<(&'a str,Option<&'a str>,usize,usize)> {
+fn get_neighbors_twice<'a>((node,twice,seen) : &(&'a str, Option<&'a str>, usize), edges : &'a HashMap<String,(usize,HashSet<String>)>) -> Vec<(&'a str,Option<&'a str>,usize)> {
     let (_,neighbors) = edges.get(*node).unwrap();
-    if *node == "end" {
+    if *node == "end" { // end can never be left
         vec![]
     } else {
         neighbors.iter().filter_map(|neighbor| {
             let (neighbor_flag,_) = edges.get(neighbor.as_str()).unwrap();
-            if *neighbor == neighbor.to_ascii_uppercase() {
-                Some( (neighbor.as_str(),twice.clone(),seen_a | neighbor_flag, seen_b | neighbor_flag) )
+            if *neighbor == neighbor.to_ascii_uppercase()  {
+                Some( (neighbor.as_str(),twice.clone(),seen | neighbor_flag) )
+            } else if *neighbor == "start" { // Start can never be reentered
+                None
             } else {
-                if seen_a & neighbor_flag != 0 && seen_b & neighbor_flag != 0 {
-                    None
-                } else if let Some(twice_v) = twice {
-                    if twice_v == neighbor {
-                        assert!(seen_a & neighbor_flag != 0 && seen_b & neighbor_flag != 0);
+                if let Some(twice_v) = twice {
+                    if twice_v == neighbor { // we already visited this one a second time
+                        assert!(seen & neighbor_flag != 0);
                         None
-                    } else if seen_a & neighbor_flag == 0 {
-                        assert!(seen_b & neighbor_flag == 0);
-                        Some( (neighbor.as_str(),Some(*twice_v),seen_a | neighbor_flag, seen_b | neighbor_flag) )
+                    } else if seen & neighbor_flag == 0 {
+                        Some( (neighbor.as_str(),Some(*twice_v),seen | neighbor_flag) )
                     } else {
                         None
                     }
                 } else {
-                    assert!(seen_b & neighbor_flag == 0);
-                    if seen_a & neighbor_flag == 0 {
-                        Some( (neighbor.as_str(),None,seen_a | neighbor_flag, *seen_b) )
-                    } else {
-                        Some( (neighbor.as_str(),Some(neighbor.as_str()),*seen_a, seen_b | neighbor_flag) )
+                    if seen & neighbor_flag == 0 { // visiting for first time
+                        Some( (neighbor.as_str(),None,seen | neighbor_flag) )
+                    } else { // we're visiting this one twice
+                        Some( (neighbor.as_str(),Some(neighbor.as_str()),*seen) )
                     }
                 }
             }
-        }).collect::<Vec<(&'a str,Option<&'a str>,usize,usize)>>()
+        }).collect::<Vec<(&'a str,Option<&'a str>,usize)>>()
     }
 }
 
@@ -74,7 +72,7 @@ fn walk_and_find<'a>(cur : (&'a str,usize), path : &Vec<&'a str>, edges : &'a Ha
     }
 }
 
-fn walk_and_find_twice<'a>(cur : (&'a str,Option<&'a str>,usize,usize), path : &Vec<&'a str>, edges : &'a HashMap<String,(usize,HashSet<String>)>, out : &mut Vec<Vec<&'a str>>) {
+fn walk_and_find_twice<'a>(cur : (&'a str,Option<&'a str>,usize), path : &Vec<&'a str>, edges : &'a HashMap<String,(usize,HashSet<String>)>, out : &mut Vec<Vec<&'a str>>) {
     let mut new_path = path.clone();
     new_path.push(cur.0);
 
@@ -115,10 +113,9 @@ fn main() -> aoc::Result<()> {
     println!("{:?}",result_once.len());
 
     let mut result_twice = Vec::new();
-    walk_and_find_twice(("start",None,start_flag,start_flag), &vec![], &edges, &mut result_twice);
+    walk_and_find_twice(("start",None,start_flag), &vec![], &edges, &mut result_twice);
 
     println!("{:?}",result_twice.len());
-
 
     Ok( () )
 }
