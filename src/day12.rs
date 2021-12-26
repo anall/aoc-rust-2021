@@ -4,27 +4,7 @@ use std::collections::{HashMap,HashSet};
 use adventlib::aoc;
 use regex::Regex;
 
-fn get_neighbors<'a>((node,seen) : &(&str, usize), edges : &'a HashMap<String,(usize,HashSet<String>)>) -> Vec<(&'a str,usize)> {
-    let (_,neighbors) = edges.get(*node).unwrap();
-    if *node == "end" {
-        vec![]
-    } else {
-        neighbors.iter().filter_map(|neighbor| {
-            let (neighbor_flag,_) = edges.get(neighbor.as_str()).unwrap();
-            if *neighbor == neighbor.to_ascii_uppercase() {
-                Some( (neighbor.as_str(),seen | neighbor_flag) )
-            } else {
-                if seen & neighbor_flag != 0 {
-                    None
-                } else {
-                    Some( (neighbor.as_str(),seen | neighbor_flag) )
-                }
-            }
-        }).collect::<Vec<(&str,usize)>>()
-    }
-}
-
-fn get_neighbors_twice<'a>((node,twice,seen) : &(&'a str, Option<&'a str>, usize), edges : &'a HashMap<String,(usize,HashSet<String>)>) -> Vec<(&'a str,Option<&'a str>,usize)> {
+fn get_neighbors<'a>((node,twice,seen) : &(&'a str, Option<&'a str>, usize), edges : &'a HashMap<String,(usize,HashSet<String>)>) -> Vec<(&'a str,Option<&'a str>,usize)> {
     let (_,neighbors) = edges.get(*node).unwrap();
     if *node == "end" { // end can never be left
         vec![]
@@ -57,7 +37,7 @@ fn get_neighbors_twice<'a>((node,twice,seen) : &(&'a str, Option<&'a str>, usize
     }
 }
 
-fn walk_and_find<'a>(cur : (&'a str,usize), path : &Vec<&'a str>, edges : &'a HashMap<String,(usize,HashSet<String>)>, out : &mut Vec<Vec<&'a str>>) {
+fn walk_and_find<'a>(cur : (&'a str,Option<&'a str>,usize), path : &Vec<&'a str>, edges : &'a HashMap<String,(usize,HashSet<String>)>, out : &mut Vec<Vec<&'a str>>) {
     let mut new_path = path.clone();
     new_path.push(cur.0);
 
@@ -68,21 +48,6 @@ fn walk_and_find<'a>(cur : (&'a str,usize), path : &Vec<&'a str>, edges : &'a Ha
 
         for neighbor in neighbors {
             walk_and_find(neighbor, &new_path, edges, out);
-        }
-    }
-}
-
-fn walk_and_find_twice<'a>(cur : (&'a str,Option<&'a str>,usize), path : &Vec<&'a str>, edges : &'a HashMap<String,(usize,HashSet<String>)>, out : &mut Vec<Vec<&'a str>>) {
-    let mut new_path = path.clone();
-    new_path.push(cur.0);
-
-    if cur.0 == "end" {
-        out.push(new_path);
-    } else {
-        let neighbors = get_neighbors_twice(&cur, edges);
-
-        for neighbor in neighbors {
-            walk_and_find_twice(neighbor, &new_path, edges, out);
         }
     }
 }
@@ -108,12 +73,12 @@ fn main() -> aoc::Result<()> {
 
     let start_flag = edges.get("start").unwrap().0;
     let mut result_once = Vec::new();
-    walk_and_find(("start",start_flag), &vec![], &edges, &mut result_once);
+    walk_and_find(("start",Some("PLACEHOLDER"),start_flag), &vec![], &edges, &mut result_once);
 
     println!("{:?}",result_once.len());
 
     let mut result_twice = Vec::new();
-    walk_and_find_twice(("start",None,start_flag), &vec![], &edges, &mut result_twice);
+    walk_and_find(("start",None,start_flag), &vec![], &edges, &mut result_twice);
 
     println!("{:?}",result_twice.len());
 
