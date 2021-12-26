@@ -50,7 +50,9 @@ path = "src/day10.rs"
 name = "aoc21-day11"
 path = "src/day11.rs"
 
-# day 12
+[[bin]]
+name = "aoc21-day12"
+path = "src/day12.rs"
 
 [[bin]]
 name = "aoc21-day13"
@@ -67,9 +69,6 @@ path = "src/day14.rs"
 [[bin]]
 name = "aoc21-day16"
 path = "src/day16.rs"
-
-[profile.release]
-opt-level = 3
 
 [dependencies]
 adventlib = { path="../adventlib" }
