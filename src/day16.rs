@@ -16,8 +16,7 @@ impl<T: Iterator<Item=u8>> BitIterator<T> {
     }
 
     pub fn next_integer<U>(&mut self, ct : usize) -> Option<U> where
-        U : std::ops::Shl<usize,Output=U> + std::ops::BitOr<Output=U>,
-        U : From<u8> + Copy
+        U : std::ops::Shl<usize,Output=U> + std::ops::BitOr<Output=U> + From<u8> + Copy
     {
         let mut result = U::from(0);
         for _ in 0 .. ct {
