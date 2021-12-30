@@ -1,6 +1,7 @@
 #![warn( clippy::pedantic )]
 use std::io::BufRead;
 use adventlib::aoc;
+use std::convert::TryFrom;
 
 use pathfinding::prelude::dijkstra;
 
@@ -9,8 +10,8 @@ fn get_extended_score(data : &[Vec<u32>], x : usize, y : usize) -> u32 {
     let m = data.len();
     let n = data[0].len();
 
-    let delta_m = (x / m) as u32;
-    let delta_n = (y / n) as u32;
+    let delta_m = u32::try_from(x / m).unwrap();
+    let delta_n = u32::try_from(y / n).unwrap();
 
     let arr_x = x % m;
     let arr_y = y % n;

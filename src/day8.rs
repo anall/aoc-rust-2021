@@ -48,7 +48,7 @@ impl Line {
 
         Self {
             patterns: patterns.split(' ').map(ToString::to_string).collect(),
-            digits: digits.split(' ').map(|s| Self::decode_seven(s) ).collect()
+            digits: digits.split(' ').map(Self::decode_seven).collect()
         }
     }
 

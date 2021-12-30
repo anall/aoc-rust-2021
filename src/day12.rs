@@ -46,8 +46,7 @@ fn walk_and_find(allow_double_visit : bool, edges : &HashMap<String,(usize,bool,
 }
 
 
-
-fn walk_and_count_internal<'a>(cur : (&'a str,Option<&'a str>,usize), edges : &'a HashMap<String,(usize,bool,HashSet<String>)>, out : &mut usize) {
+fn walk_and_count_internal(cur : (&str,Option<&str>,usize), edges : &HashMap<String,(usize,bool,HashSet<String>)>, out : &mut usize) {
     if cur.0 == "end" {
         *out += 1;
     } else {
@@ -82,18 +81,21 @@ fn main() -> aoc::Result<()> {
             let left = &cap[1];
             let right = &cap[2];
 
-            // start cannot be reentered
+            // start cannot be reentered, however we should still create the entries no matter the order
+            let l_entry = out.entry(left.to_string()).or_insert_with(|| {
+                let cbit = bit;
+                bit <<= 1;
+                (cbit,left == left.to_ascii_uppercase(),HashSet::new()) });
             if right != "start" {
-                out.entry(left.to_string()).or_insert_with(|| {
-                    let cbit = bit;
-                    bit <<= 1;
-                    (cbit,left == left.to_ascii_uppercase(),HashSet::new()) }).2.insert(right.to_string());
+                l_entry.2.insert(right.to_string());
             }
+
+            let r_entry = out.entry(right.to_string()).or_insert_with(|| {
+                let cbit = bit;
+                bit <<= 1;
+                (cbit,right == right.to_ascii_uppercase(),HashSet::new()) });
             if left != "start" {
-                out.entry(right.to_string()).or_insert_with(|| {
-                    let cbit = bit;
-                    bit <<= 1;
-                    (cbit,right == right.to_ascii_uppercase(),HashSet::new()) }).2.insert(left.to_string());
+                r_entry.2.insert(left.to_string());
             }
         }
 
